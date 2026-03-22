@@ -1,0 +1,15 @@
+# 環境変数（機密情報）
+.env
+
+# Pi-hole の設定ファイル（機密情報を含む可能性）
+pihole/etc-pihole/
+
+# WireGuard の設定ファイル（秘密鍵を含む）
+wireguard/config/
+
+# macOS
+.DS_Store
+
+# エディタ
+.vscode/
+*.swp

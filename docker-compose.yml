@@ -1,0 +1,74 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - dmz
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - dmz
+
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8080:80"
+    environment:
+      TZ: ${TZ:-Asia/Tokyo}
+      WEBPASSWORD: ${PIHOLE_WEBPASSWORD}
+      PIHOLE_DNS_: "1.1.1.1;8.8.8.8"
+    volumes:
+      - ./pihole/etc-pihole:/etc/pihole
+      - ./pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+    networks:
+      - dmz
+
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-Asia/Tokyo}
+      SERVERURL: ${WIREGUARD_SERVERURL}
+      SERVERPORT: ${WIREGUARD_PORT:-51820}
+      PEERS: ${WIREGUARD_PEERS:-1}
+      PEERDNS: ${WIREGUARD_PEERDNS:-auto}
+      INTERNAL_SUBNET: ${WIREGUARD_SUBNET:-10.13.13.0}
+    ports:
+      - "51820:51820/udp"
+    volumes:
+      - ./wireguard/config:/config
+      - /lib/modules:/lib/modules
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      - dmz
+
+volumes:
+  portainer_data:
+
+networks:
+  dmz:
+    driver: bridge
