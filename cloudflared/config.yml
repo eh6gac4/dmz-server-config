@@ -1,0 +1,10 @@
+tunnel: ${CLOUDFLARE_TUNNEL_ID}
+credentials-file: /etc/cloudflared/creds.json
+
+ingress:
+  # Pi-hole 管理画面
+  - hostname: pihole.${CLOUDFLARE_DOMAIN}
+    service: http://pihole:80
+
+  # マッチしないリクエストはすべて拒否
+  - service: http_status:404
